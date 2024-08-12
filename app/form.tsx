@@ -8,7 +8,7 @@ import {
 	getInputProps,
 } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod';
-import { createSignupSchema } from '@/app/schema';
+import { client } from './schema';
 
 function Button(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
 	const { pending } = useFormStatus();
@@ -23,7 +23,7 @@ export function SignupForm() {
 		onValidate({ formData }) {
 			return parseWithZod(formData, {
 				// Create the schema without any constraint defined
-				schema: (control) => createSignupSchema(control),
+				schema: client,
 			});
 		},
 		shouldValidate: 'onBlur',

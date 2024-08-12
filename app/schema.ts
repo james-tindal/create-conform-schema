@@ -1,55 +1,36 @@
-import type { Intent } from '@conform-to/react';
 import { conformZodMessage } from '@conform-to/zod';
 import { z } from 'zod';
+import { createFormSchema } from './createSchema';
 
-export function createSignupSchema(
-	intent: Intent | null,
-	options?: {
-		// isUsernameUnique is only defined on the server
-		isUsernameUnique: (username: string) => Promise<boolean>;
-	},
-) {
-	return z.object({
-		username: z
-			.string({ required_error: 'Username is required' })
-			.regex(
-				/^[a-zA-Z0-9]+$/,
-				'Invalid username: only letters or numbers are allowed',
-			)
-			.pipe(
-				z.string().superRefine((username, ctx) => {
-					const isValidatingUsername =
-						intent === null ||
-						(intent.type === 'validate' &&
-							intent.payload.name === 'username');
-
-					if (!isValidatingUsername) {
-						ctx.addIssue({
-							code: 'custom',
-							message: conformZodMessage.VALIDATION_SKIPPED,
-						});
-						return;
-					}
-
-					if (typeof options?.isUsernameUnique !== 'function') {
-						ctx.addIssue({
-							code: 'custom',
-							message: conformZodMessage.VALIDATION_UNDEFINED,
-							fatal: true,
-						});
-						return;
-					}
-
-					return options.isUsernameUnique(username).then((isUnique) => {
-						if (!isUnique) {
+export const { client, server } = createFormSchema(server => z.object({
+	username: z
+		.string({ required_error: 'Username is required' })
+		.regex(
+			/^[a-zA-Z0-9]+$/,
+			'Invalid username: only letters or numbers are allowed',
+		)
+		.pipe(
+			z.string().superRefine((username, ctx) => {
+				if (! server?.isUsernameUnique) {
+					ctx.addIssue({
+						code: 'custom',
+						message: conformZodMessage.VALIDATION_UNDEFINED,
+						fatal: true,
+					});
+					return;
+				}
+				const isUsernameUnique = server.isUsernameUnique(username)
+				if (isUsernameUnique instanceof Promise)
+					return isUsernameUnique.then(isUsernameUnique => {
+						if (!isUsernameUnique)
 							ctx.addIssue({
 								code: 'custom',
 								message: 'Username is already used',
-							});
-						}
-					});
-				}),
-			),
-		password: z.string({ required_error: 'Password is required' }),
-	})
-}
+							})
+					})
+				else
+					return isUsernameUnique
+			}),
+		),
+	password: z.string({ required_error: 'Password is required' })
+}))
