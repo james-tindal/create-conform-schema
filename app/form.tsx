@@ -50,15 +50,6 @@ export function SignupForm() {
 				/>
 				<div>{fields.password.errors}</div>
 			</label>
-			<label>
-				<div>Confirm Password</div>
-				<input
-					className={!fields.confirmPassword.valid ? 'error' : ''}
-					{...getInputProps(fields.confirmPassword, { type: 'password' })}
-					key={fields.confirmPassword.key}
-				/>
-				<div>{fields.confirmPassword.errors}</div>
-			</label>
 			<hr />
 			<Button>Signup</Button>
 		</form>

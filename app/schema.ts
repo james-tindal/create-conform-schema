@@ -9,61 +9,47 @@ export function createSignupSchema(
 		isUsernameUnique: (username: string) => Promise<boolean>;
 	},
 ) {
-	return z
-		.object({
-			username: z
-				.string({ required_error: 'Username is required' })
-				.regex(
-					/^[a-zA-Z0-9]+$/,
-					'Invalid username: only letters or numbers are allowed',
-				)
-				// Pipe the schema so it runs only if the username is valid
-				.pipe(
-					z.string().superRefine((username, ctx) => {
-						const isValidatingUsername =
-							intent === null ||
-							(intent.type === 'validate' &&
-								intent.payload.name === 'username');
+	return z.object({
+		username: z
+			.string({ required_error: 'Username is required' })
+			.regex(
+				/^[a-zA-Z0-9]+$/,
+				'Invalid username: only letters or numbers are allowed',
+			)
+			.pipe(
+				z.string().superRefine((username, ctx) => {
+					const isValidatingUsername =
+						intent === null ||
+						(intent.type === 'validate' &&
+							intent.payload.name === 'username');
 
-						if (!isValidatingUsername) {
-							ctx.addIssue({
-								code: 'custom',
-								message: conformZodMessage.VALIDATION_SKIPPED,
-							});
-							return;
-						}
-
-						if (typeof options?.isUsernameUnique !== 'function') {
-							ctx.addIssue({
-								code: 'custom',
-								message: conformZodMessage.VALIDATION_UNDEFINED,
-								fatal: true,
-							});
-							return;
-						}
-
-						return options.isUsernameUnique(username).then((isUnique) => {
-							if (!isUnique) {
-								ctx.addIssue({
-									code: 'custom',
-									message: 'Username is already used',
-								});
-							}
+					if (!isValidatingUsername) {
+						ctx.addIssue({
+							code: 'custom',
+							message: conformZodMessage.VALIDATION_SKIPPED,
 						});
-					}),
-				),
-		})
-		.and(
-			z
-				.object({
-					password: z.string({ required_error: 'Password is required' }),
-					confirmPassword: z.string({
-						required_error: 'Confirm password is required',
-					}),
-				})
-				.refine((data) => data.password === data.confirmPassword, {
-					message: 'Password does not match',
-					path: ['confirmPassword'],
+						return;
+					}
+
+					if (typeof options?.isUsernameUnique !== 'function') {
+						ctx.addIssue({
+							code: 'custom',
+							message: conformZodMessage.VALIDATION_UNDEFINED,
+							fatal: true,
+						});
+						return;
+					}
+
+					return options.isUsernameUnique(username).then((isUnique) => {
+						if (!isUnique) {
+							ctx.addIssue({
+								code: 'custom',
+								message: 'Username is already used',
+							});
+						}
+					});
 				}),
-		);
+			),
+		password: z.string({ required_error: 'Password is required' }),
+	})
 }
