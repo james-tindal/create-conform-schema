@@ -27,12 +27,6 @@ export default function RootLayout({
 
 					<ul>
 						<li>
-							<Link href="login">Login</Link>
-						</li>
-						<li>
-							<Link href="todos">Todo list</Link>
-						</li>
-						<li>
 							<Link href="signup">Signup</Link>
 						</li>
 					</ul>

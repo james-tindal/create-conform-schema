@@ -2,22 +2,6 @@ import type { Intent } from '@conform-to/react';
 import { conformZodMessage } from '@conform-to/zod';
 import { z } from 'zod';
 
-export const taskSchema = z.object({
-	content: z.string(),
-	completed: z.boolean().optional(),
-});
-
-export const todosSchema = z.object({
-	title: z.string(),
-	tasks: z.array(taskSchema).nonempty(),
-});
-
-export const loginSchema = z.object({
-	email: z.string().email(),
-	password: z.string(),
-	remember: z.boolean().optional(),
-});
-
 export function createSignupSchema(
 	intent: Intent | null,
 	options?: {
