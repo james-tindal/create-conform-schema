@@ -2,23 +2,6 @@ import { Intent } from '@conform-to/react'
 import { conformZodMessage } from '@conform-to/zod'
 import { RefinementCtx, z, ZodSchema } from 'zod'
 
-// # Skipping on intent
-
-// Next:
-//   It should do something with the intent
-// What?
-//   if
-//     intent.type == validate
-//     &&
-//     intent.payload.name !== ctx.path[0]
-//   skip
-
-// Where do we do this?
-// addIssueOnFail
-
-// need to pass intent into it
-// then compare with ctx.path
-
 
 export function createConformSchema<ServerValidationNames extends string>(
   defineSchema: (server: Refinements<string extends ServerValidationNames ? never : ServerValidationNames>) => ZodSchema
@@ -26,7 +9,7 @@ export function createConformSchema<ServerValidationNames extends string>(
   const schemaCreator = (predicates?: Predicates<ServerValidationNames>) => (intent: Intent | null) => {
     const refinements =
       predicates
-      ? mapObject(predicates, predicateToRefinement)
+      ? mapObject(predicates, predicateToRefinement(intent))
       : redirectToServerProxy<ServerValidationNames>()
     return defineSchema(refinements)
   }
@@ -41,10 +24,16 @@ export function createConformSchema<ServerValidationNames extends string>(
   }
 }
 
-const predicateToRefinement = (predicate: Predicate) => (message: string) =>
+const predicateToRefinement = (intent: Intent | null) => (predicate: Predicate) => (message: string) =>
   z.unknown().superRefine(
     async (input: any, ctx: RefinementCtx) => {
-      console.log(ctx.path)
+      if ( intent?.type == 'validate' &&
+           intent.payload.name !== ctx.path[0] )
+        return ctx.addIssue({
+          code: 'custom',
+          message: conformZodMessage.VALIDATION_SKIPPED
+        })
+      
       const truthy = await predicate(input)
       if (! truthy)
         ctx.addIssue({
@@ -62,24 +51,11 @@ const redirectToServer = (message: string) =>
     })
   )
 
-// Every key returns the validateOnServer refinement
+// Every key returns the redirectToServer refinement
 const redirectToServerProxy = <Keys extends string>(): Record<Keys, Refinement> =>
   new Proxy(
     {} as Record<Keys, Refinement>,
     { get: () => redirectToServer })
-
-
-// # Skipping
-
-// Now how to add skips to this model?
-// Every server validation checks the intent and skips if irrelevant
-
-// I could also add helpers to the "define" function
-// arg is "context"
-// ctx.intent
-// ctx.skip -> function to skip this validation
-// ctx.skip -> object of supplied skip functions.  Not at all sure this has any value
-
 
 // Map all values to another type. Keys not modified.
 function mapObject<Key extends string | number | symbol, In, Out>(
