@@ -6,11 +6,13 @@
 		"dev": "next dev",
 		"build": "next build",
 		"start": "next start",
-		"lint": "next lint"
+		"lint": "next lint",
+		"test": "playwright test"
 	},
 	"dependencies": {
 		"@conform-to/react": "1.1.5",
 		"@conform-to/zod": "1.1.5",
+		"@playwright/test": "^1.46.0",
 		"next": "14.0.4",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
