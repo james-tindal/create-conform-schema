@@ -1,27 +1,12 @@
 import { conformZodMessage } from '@conform-to/zod'
 import { RefinementCtx, z, ZodSchema } from 'zod'
 
-export type AsyncTruthy = any | Promise<any>
+// make it collect intent
 
-export type Predicate = (input: any) => AsyncTruthy
-
-export type Refinement = (message: string) => ZodSchema
-
-type Predicates<Name extends string> = {
-  [key in Name]: Predicate
-}
-
-type Refinements<Name extends string> = {
-  [key in Name]: Refinement
-}
-
-type ServerValidationNames = 'isUsernameUnique'
-
-
-export function createFormSchema(
-  defineSchema: (server: Refinements<ServerValidationNames>) => ZodSchema
+export function createFormSchema<ServerValidationNames extends string>(
+  defineSchema: (server: Refinements<string extends ServerValidationNames ? never : ServerValidationNames>) => ZodSchema
 ) {
-  const schemaCreator = (predicates?: Predicates<ServerValidationNames>) =>{
+  const schemaCreator = (predicates?: Predicates<ServerValidationNames>) => {
     const refinements =
       predicates
       ? mapObject(predicates, makeRefinement)
@@ -29,8 +14,12 @@ export function createFormSchema(
     return defineSchema(refinements)
   }
 
+  type PredicateObject = string extends ServerValidationNames
+    ? EmptyObject
+    : Predicates<ServerValidationNames>
+
   return {
-    server: schemaCreator,
+    server: schemaCreator as (predicates: PredicateObject) => ZodSchema,
     client: schemaCreator()
   }
 }
@@ -67,13 +56,15 @@ const makeRefinement = (predicate?: Predicate) => (message: string) =>
 // ctx.skip -> object of supplied skip functions.  Not at all sure this has any value
 
 
-const mapObject = <Object extends object, Out>(object: Object, mapFn: (value: Object[keyof Object]) => Out) => {
+// Map all values to another type. Keys not modified.
+function mapObject<Key extends string | number | symbol, In, Out>(
+  object: Record<Key, In>,
+  mapFn: (value: In) => Out
+): Record<Key, Out> {
   const entries = Object.entries(object).map(([k, v]) =>
-    [k, mapFn(v)]
+    [k, mapFn(v as In)]
   )
-  return Object.fromEntries(entries) as unknown as {
-    [key in keyof Object]: Out
-  }
+  return Object.fromEntries(entries)
 }
 
 // Proxy that returns the same value for every key
@@ -81,3 +72,20 @@ const monoProxy = <Value>(value: Value) => <Keys extends string>(): Record<Keys,
   new Proxy(
     {} as Record<Keys, Value>,
     { get: () => value })
+
+type AsyncTruthy = any | Promise<any>
+
+type Predicate = (input: any) => AsyncTruthy
+
+type Refinement = (message: string) => ZodSchema
+
+type Predicates<Name extends string> = {
+  [key in Name]: Predicate
+}
+
+type Refinements<Name extends string> = {
+  [key in Name]: Refinement
+}
+
+const symbol = Symbol()
+type EmptyObject = { [symbol]?: never }

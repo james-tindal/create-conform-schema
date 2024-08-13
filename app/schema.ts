@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import { createFormSchema } from './createSchema';
 
-export const { client, server } = createFormSchema(server => z.object({
+type ServerValidationNames = 'isUsernameUnique'
+export const { client, server } = createFormSchema<ServerValidationNames>(server => z.object({
 	username: z
 		.string({ required_error: 'Username is required' })
 		.regex(
