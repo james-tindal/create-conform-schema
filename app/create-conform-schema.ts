@@ -1,16 +1,20 @@
+import { Intent } from '@conform-to/react'
 import { conformZodMessage } from '@conform-to/zod'
 import { RefinementCtx, z, ZodSchema } from 'zod'
 
-// make it collect intent
+// # Skipping on intent
 
-export function createFormSchema<ServerValidationNames extends string>(
+// Intent comes from:
+//   schemaCreator. This needs to take intent as an argument
+
+export function createConformSchema<ServerValidationNames extends string>(
   defineSchema: (server: Refinements<string extends ServerValidationNames ? never : ServerValidationNames>) => ZodSchema
 ) {
-  const schemaCreator = (predicates?: Predicates<ServerValidationNames>) => {
+  const schemaCreator = (predicates?: Predicates<ServerValidationNames>) => (intent: Intent | null) => {
     const refinements =
       predicates
       ? mapObject(predicates, makeRefinement)
-      : monoProxy(makeRefinement())<ServerValidationNames>()
+      : validateOnServerProxy<ServerValidationNames>()
     return defineSchema(refinements)
   }
 
@@ -19,12 +23,13 @@ export function createFormSchema<ServerValidationNames extends string>(
     : Predicates<ServerValidationNames>
 
   return {
-    server: schemaCreator as (predicates: PredicateObject) => ZodSchema,
+    server: schemaCreator as (predicates: PredicateObject) => (intent: Intent | null) => ZodSchema,
     client: schemaCreator()
   }
 }
 
 const addIssueOnFail = (message: string, predicate: Predicate) => async (input: any, ctx: RefinementCtx) => {
+  console.log(ctx.path)
 	const truthy = await predicate(input)
 	if (! truthy)
 		ctx.addIssue({
@@ -67,11 +72,11 @@ function mapObject<Key extends string | number | symbol, In, Out>(
   return Object.fromEntries(entries)
 }
 
-// Proxy that returns the same value for every key
-const monoProxy = <Value>(value: Value) => <Keys extends string>(): Record<Keys, Value> =>
+// Every key returns the validateOnServer refinement
+const validateOnServerProxy = <Keys extends string>(): Record<Keys, Refinement> =>
   new Proxy(
-    {} as Record<Keys, Value>,
-    { get: () => value })
+    {} as Record<Keys, Refinement>,
+    { get: () => makeRefinement() })
 
 type AsyncTruthy = any | Promise<any>
 
