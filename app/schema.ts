@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { createFormSchema, makeRefinement } from './createSchema';
+import { createFormSchema } from './createSchema';
 
 export const { client, server } = createFormSchema(server => z.object({
 	username: z
@@ -8,8 +8,7 @@ export const { client, server } = createFormSchema(server => z.object({
 			/^[a-zA-Z0-9]+$/,
 			'Invalid username: only letters or numbers are allowed',
 		)
-		.pipe(
-			makeRefinement('Username is already used', server?.isUsernameUnique),
-		),
+		.pipe(server.isUsernameUnique('Username is already used')),
+
 	password: z.string({ required_error: 'Password is required' })
 }))

@@ -7,16 +7,24 @@ export type Predicate = (input: any) => AsyncTruthy
 
 export type Refinement = (message: string) => ZodSchema
 
-interface Server {
-  isUsernameUnique: Predicate
+type Predicates<Name extends string> = {
+  [key in Name]: Predicate
 }
+
+type Refinements<Name extends string> = {
+  [key in Name]: Refinement
+}
+
+type ServerValidationNames = 'isUsernameUnique'
 
 
 export function createFormSchema(
-  create: (server?: Server) => ZodSchema
+  create: (server: Refinements<ServerValidationNames>) => ZodSchema
 ) {
-  const schemaCreator = (server?: Server) =>
-    create(server)
+  const schemaCreator = (server?: Predicates<ServerValidationNames>) =>
+    create({
+      isUsernameUnique: makeRefinement(server?.isUsernameUnique)
+    })
 
   return {
     server: schemaCreator,
@@ -47,5 +55,5 @@ const makeRefinementFunction = (message: string, predicate?: Predicate) => (inpu
 	return addIssueOnFail(asyncTruthy, message, ctx)
 }
 
-export const makeRefinement = (message: string, predicate?: Predicate) =>
+export const makeRefinement = (predicate?: Predicate) => (message: string) =>
   z.string().superRefine(makeRefinementFunction(message, predicate))
