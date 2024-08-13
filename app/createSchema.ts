@@ -17,16 +17,17 @@ type Refinements<Name extends string> = {
 
 type ServerValidationNames = 'isUsernameUnique'
 
-// function that:
-// maps predicates to refinements
 
 export function createFormSchema(
-  define: (server: Refinements<ServerValidationNames>) => ZodSchema
+  defineSchema: (server: Refinements<ServerValidationNames>) => ZodSchema
 ) {
-  const schemaCreator = (server?: Predicates<ServerValidationNames>) =>
-    define({
-      isUsernameUnique: makeRefinement(server?.isUsernameUnique)
-    })
+  const schemaCreator = (predicates?: Predicates<ServerValidationNames>) =>{
+    const refinements =
+      predicates
+      ? mapObject(predicates, makeRefinement)
+      : monoProxy(makeRefinement())<ServerValidationNames>()
+    return defineSchema(refinements)
+  }
 
   return {
     server: schemaCreator,
@@ -49,9 +50,12 @@ const validateOnServer = (input: any, ctx: RefinementCtx) => ctx.addIssue({
 	fatal: true,
 })
 
-export const makeRefinement = (predicate?: Predicate) => (message: string) =>
+const makeRefinement = (predicate?: Predicate) => (message: string) =>
   z.unknown().superRefine(
     predicate ? addIssueOnFail(message, predicate) : validateOnServer)
+
+
+// # Skipping
 
 // Now how to add skips to this model?
 // Every server validation checks the intent and skips if irrelevant
@@ -61,3 +65,19 @@ export const makeRefinement = (predicate?: Predicate) => (message: string) =>
 // ctx.intent
 // ctx.skip -> function to skip this validation
 // ctx.skip -> object of supplied skip functions.  Not at all sure this has any value
+
+
+const mapObject = <Object extends object, Out>(object: Object, mapFn: (value: Object[keyof Object]) => Out) => {
+  const entries = Object.entries(object).map(([k, v]) =>
+    [k, mapFn(v)]
+  )
+  return Object.fromEntries(entries) as unknown as {
+    [key in keyof Object]: Out
+  }
+}
+
+// Proxy that returns the same value for every key
+const monoProxy = <Value>(value: Value) => <Keys extends string>(): Record<Keys, Value> =>
+  new Proxy(
+    {} as Record<Keys, Value>,
+    { get: () => value })
