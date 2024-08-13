@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { createConformSchema } from './create-conform-schema';
 
 type ServerValidationNames = 'isUsernameUnique'
-export const { client, server } = createConformSchema<ServerValidationNames>(server => z.object({
+export const { client, server } = createConformSchema<ServerValidationNames>(({ server, intent }) => z.object({
 	username: z
 		.string({ required_error: 'Username is required' })
 		.regex(
@@ -10,6 +10,7 @@ export const { client, server } = createConformSchema<ServerValidationNames>(ser
 			'Invalid username: only letters or numbers are allowed',
 		)
 		.pipe(server.isUsernameUnique('Username is already used'))
+		.pipe(z.string().superRefine((a, b) => console.log('hello from refinement', intent)))
 		// .pipe(refine<Input>((username, { skip, validateOnServer, addIssue, path }) => {
 			
 		// }))
@@ -17,3 +18,8 @@ export const { client, server } = createConformSchema<ServerValidationNames>(ser
 
 	password: z.string({ required_error: 'Password is required' })
 }))
+
+
+// 2 more features:
+// * schemaCtx: add intent
+// * refinementCtx: various features

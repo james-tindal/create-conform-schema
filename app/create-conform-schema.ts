@@ -3,15 +3,20 @@ import { conformZodMessage } from '@conform-to/zod'
 import { RefinementCtx, z, ZodSchema } from 'zod'
 
 
+type DefineSchemaContext<ServerValidationNames extends string> = {
+  server: Refinements<string extends ServerValidationNames ? never : ServerValidationNames>
+  intent: Intent | null
+}
+
 export function createConformSchema<ServerValidationNames extends string>(
-  defineSchema: (server: Refinements<string extends ServerValidationNames ? never : ServerValidationNames>) => ZodSchema
+  defineSchema: (ctx: DefineSchemaContext<ServerValidationNames>) => ZodSchema
 ) {
   const schemaCreator = (predicates?: Predicates<ServerValidationNames>) => (intent: Intent | null) => {
     const refinements =
       predicates
       ? mapObject(predicates, predicateToRefinement(intent))
       : redirectToServerProxy<ServerValidationNames>()
-    return defineSchema(refinements)
+    return defineSchema({ server: refinements, intent })
   }
 
   type PredicateObject = string extends ServerValidationNames
