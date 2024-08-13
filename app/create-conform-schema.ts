@@ -4,8 +4,21 @@ import { RefinementCtx, z, ZodSchema } from 'zod'
 
 // # Skipping on intent
 
-// Intent comes from:
-//   schemaCreator. This needs to take intent as an argument
+// Next:
+//   It should do something with the intent
+// What?
+//   if
+//     intent.type == validate
+//     &&
+//     intent.payload.name !== ctx.path[0]
+//   skip
+
+// Where do we do this?
+// addIssueOnFail
+
+// need to pass intent into it
+// then compare with ctx.path
+
 
 export function createConformSchema<ServerValidationNames extends string>(
   defineSchema: (server: Refinements<string extends ServerValidationNames ? never : ServerValidationNames>) => ZodSchema
@@ -13,8 +26,8 @@ export function createConformSchema<ServerValidationNames extends string>(
   const schemaCreator = (predicates?: Predicates<ServerValidationNames>) => (intent: Intent | null) => {
     const refinements =
       predicates
-      ? mapObject(predicates, makeRefinement)
-      : validateOnServerProxy<ServerValidationNames>()
+      ? mapObject(predicates, predicateToRefinement)
+      : redirectToServerProxy<ServerValidationNames>()
     return defineSchema(refinements)
   }
 
@@ -28,25 +41,32 @@ export function createConformSchema<ServerValidationNames extends string>(
   }
 }
 
-const addIssueOnFail = (message: string, predicate: Predicate) => async (input: any, ctx: RefinementCtx) => {
-  console.log(ctx.path)
-	const truthy = await predicate(input)
-	if (! truthy)
-		ctx.addIssue({
-			code: 'custom',
-			message: message,
-		})
-}
-
-const validateOnServer = (input: any, ctx: RefinementCtx) => ctx.addIssue({
-	code: 'custom',
-	message: conformZodMessage.VALIDATION_UNDEFINED,
-	fatal: true,
-})
-
-const makeRefinement = (predicate?: Predicate) => (message: string) =>
+const predicateToRefinement = (predicate: Predicate) => (message: string) =>
   z.unknown().superRefine(
-    predicate ? addIssueOnFail(message, predicate) : validateOnServer)
+    async (input: any, ctx: RefinementCtx) => {
+      console.log(ctx.path)
+      const truthy = await predicate(input)
+      if (! truthy)
+        ctx.addIssue({
+          code: 'custom',
+          message: message,
+        })
+    })
+
+const redirectToServer = (message: string) =>
+  z.unknown().superRefine(
+    (input: any, ctx: RefinementCtx) => ctx.addIssue({
+      code: 'custom',
+      message: conformZodMessage.VALIDATION_UNDEFINED,
+      fatal: true,
+    })
+  )
+
+// Every key returns the validateOnServer refinement
+const redirectToServerProxy = <Keys extends string>(): Record<Keys, Refinement> =>
+  new Proxy(
+    {} as Record<Keys, Refinement>,
+    { get: () => redirectToServer })
 
 
 // # Skipping
@@ -71,12 +91,6 @@ function mapObject<Key extends string | number | symbol, In, Out>(
   )
   return Object.fromEntries(entries)
 }
-
-// Every key returns the validateOnServer refinement
-const validateOnServerProxy = <Keys extends string>(): Record<Keys, Refinement> =>
-  new Proxy(
-    {} as Record<Keys, Refinement>,
-    { get: () => makeRefinement() })
 
 type AsyncTruthy = any | Promise<any>
 
