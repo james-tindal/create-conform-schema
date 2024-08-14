@@ -13,9 +13,8 @@ export const { client, server } = createConformSchema<ServerValidationNames>(({ 
 		.pipe(server.isUsernameUnique('Username is already used'))
 		.pipe(z.string().superRefine((a, b) => console.log('hello from refinement', intent)))
 		.pipe(refine<string>((username, { skip, validateOnServer, addIssue, path }) => {
-			return false
-		}))
-		,
+			return false	
+		})),
 
 	password: z.string({ required_error: 'Password is required' })
 }))
