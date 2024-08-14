@@ -1,17 +1,17 @@
-import type { Metadata } from 'next';
-import Link from 'next/link';
+import type { Metadata } from 'next'
+import Link from 'next/link'
 
 // These styles apply to every route in the application
-import './globals.css';
+import './globals.css'
 
 export const metadata: Metadata = {
 	title: 'NextJS - Conform Example',
-};
+}
 
 export default function RootLayout({
 	children,
 }: {
-	children: React.ReactNode;
+	children: React.ReactNode
 }) {
 	return (
 		<html lang="en">
@@ -37,5 +37,5 @@ export default function RootLayout({
 				</main>
 			</body>
 		</html>
-	);
+	)
 }

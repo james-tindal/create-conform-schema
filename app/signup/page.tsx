@@ -1,31 +1,31 @@
-'use client';
+'use client'
 
-import { useFormState, useFormStatus } from 'react-dom';
-import { signup } from '@/app/signup/action';
+import { useFormState, useFormStatus } from 'react-dom'
+import { signup } from '@/app/signup/action'
 import {
 	useForm,
 	getFormProps,
 	getInputProps,
-} from '@conform-to/react';
-import { parseWithZod } from '@conform-to/zod';
-import { client } from './schema';
+} from '@conform-to/react'
+import { parseWithZod } from '@conform-to/zod'
+import { client } from './schema'
 
 function Button(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
-	const { pending } = useFormStatus();
+	const { pending } = useFormStatus()
 
-	return <button {...props} disabled={pending || props.disabled} />;
+	return <button {...props} disabled={pending || props.disabled} />
 }
 
 export default function SignupForm() {
-	const [lastResult, action] = useFormState(signup, undefined);
+	const [lastResult, action] = useFormState(signup, undefined)
 	const [form, fields] = useForm({
 		lastResult,
 		onValidate({ formData }) {
-			return parseWithZod(formData, { schema: client });
+			return parseWithZod(formData, { schema: client })
 		},
 		shouldValidate: 'onBlur',
 		shouldRevalidate: 'onInput',
-	});
+	})
 
 	return (
 		<form action={action} {...getFormProps(form)}>
@@ -50,5 +50,5 @@ export default function SignupForm() {
 			<hr />
 			<Button>Signup</Button>
 		</form>
-	);
+	)
 }
