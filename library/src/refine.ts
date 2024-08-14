@@ -1,15 +1,13 @@
 import { conformZodMessage } from '@conform-to/zod'
 import { z } from 'zod'
 
-type CustomIssue = Omit<z.ZodCustomIssue, 'code'>
-type IssueData = z.IssueData | CustomIssue
 
 interface RefineContext {
-  skip: z.RefinementCtx['addIssue']
-  validateOnServer: z.RefinementCtx['addIssue']
+  skip: () => void
+  validateOnServer: () => void
   path: z.RefinementCtx['path']
   addIssue(message: string): void
-  addIssue(issueData: IssueData): void
+  addIssue(issueData: z.IssueData): void
 }
 
 export const refine = <Input>(refinement: (input: Input, ctx: RefineContext) => void) =>
