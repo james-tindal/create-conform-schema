@@ -1,28 +1,28 @@
 {
-	"name": "@conform-example/nextjs",
+	"name": "create-conform-schema-example",
 	"private": true,
 	"license": "MIT",
 	"scripts": {
 		"dev": "next dev",
 		"build": "next build",
 		"start": "next start",
-		"lint": "next lint",
-		"test": "playwright test"
+		"lint": "next lint"
 	},
 	"dependencies": {
-		"@conform-to/react": "1.1.5",
 		"@conform-to/zod": "1.1.5",
-		"@playwright/test": "^1.46.0",
-		"next": "14.0.4",
-		"react": "^18.2.0",
-		"react-dom": "^18.2.0",
-		"zod": "3.21.4"
+		"zod": "3.21.4",
+		"create-conform-schema": "file:../library"
 	},
 	"devDependencies": {
 		"@types/node": "^20",
 		"@types/react": "^18",
 		"@types/react-dom": "^18",
+		"@conform-to/react": "1.1.5",
 		"eslint": "^8",
+		"next": "14.0.4",
+		"react": "^18.2.0",
+		"react-dom": "^18.2.0",
+		"tsup": "^8.2.4",
 		"eslint-config-next": "14.0.4",
 		"typescript": "^5"
 	}

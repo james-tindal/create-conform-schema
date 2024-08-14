@@ -1,6 +1,5 @@
 import { z } from 'zod'
-import { createConformSchema, Predicates } from '../create-conform-schema'
-import { refine } from '../create-conform-refine'
+import { createConformSchema, Predicates, refine } from 'create-conform-schema'
 
 type ServerValidationNames = 'isUsernameUnique'
 export type ServerValidations = Predicates<ServerValidationNames>
