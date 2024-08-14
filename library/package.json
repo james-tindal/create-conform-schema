@@ -1,6 +1,7 @@
 {
   "name": "create-conform-schema",
   "version": "1.0.0",
+  "repository": "github:james-tindal/create-conform-schema",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
