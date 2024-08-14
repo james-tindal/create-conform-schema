@@ -36,7 +36,8 @@ export const refine = <Input>(refinement: (input: Input, ctx: RefineContext) => 
       validateOnServer: () =>
         ctx.addIssue({
           code: 'custom',
-          message: conformZodMessage.VALIDATION_UNDEFINED
+          message: conformZodMessage.VALIDATION_UNDEFINED,
+          fatal: true
         })
     })
   )
