@@ -79,7 +79,7 @@ type Predicate = (input: any) => AsyncTruthy
 
 type Refinement = (message: string) => ZodSchema
 
-type Predicates<Name extends string> = {
+export type Predicates<Name extends string> = {
   [key in Name]: Predicate
 }
 

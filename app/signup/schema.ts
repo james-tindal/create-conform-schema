@@ -1,8 +1,9 @@
-import { z } from 'zod';
-import { createConformSchema } from './create-conform-schema';
-import { refine } from './create-conform-refine';
+import { z } from 'zod'
+import { createConformSchema, Predicates } from '../create-conform-schema'
+import { refine } from '../create-conform-refine'
 
 type ServerValidationNames = 'isUsernameUnique'
+export type ServerValidations = Predicates<ServerValidationNames>
 export const { client, server } = createConformSchema<ServerValidationNames>(({ server, intent }) => z.object({
 	username: z
 		.string({ required_error: 'Username is required' })
