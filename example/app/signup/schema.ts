@@ -11,9 +11,24 @@ export const { client, server } = createConformSchema<ServerValidationNames>(({ 
 			'Invalid username: only letters or numbers are allowed',
 		)
 		.pipe(server.isUsernameUnique('Username is already used'))
-		.pipe(z.string().superRefine((a, b) => console.log('hello from refinement', intent)))
 		.pipe(refine<string>((username, { skip, validateOnServer, addIssue, path }) => {
-			return false	
+      if ( intent?.type == 'validate' &&
+           intent.payload.name !== path[0] )
+        return skip()
+
+      if (!'Something?')
+        return validateOnServer()
+
+      if (username == 'jimmy')
+        addIssue('jimmy is a bad username')
+
+      if (username.length < 3)
+        addIssue({
+          code: 'too_small',
+          minimum: 3,
+          inclusive: true,
+          type: 'string'
+        })
 		})),
 
 	password: z.string({ required_error: 'Password is required' })
